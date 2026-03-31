@@ -32,18 +32,26 @@ class NoteCellTableViewCell: UITableViewCell {
             return label
         }()
         
-        // 2. Инициализаторы
         override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
             super.init(style: style, reuseIdentifier: reuseIdentifier)
             setupUI()
         }
-        
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        // 3. Настройка UI
         private func setupUI() {
+            backgroundColor = .clear
+            contentView.backgroundColor = .white
+            contentView.layer.cornerRadius = 12
+            contentView.layer.masksToBounds = true
+            
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.3
+            layer.shadowOffset = CGSize(width: 0, height: 2)
+            layer.shadowRadius = 12
+            layer.masksToBounds = false
+            
             contentView.addSubview(emojiLabel)
             contentView.addSubview(titleLabel)
             contentView.addSubview(descriptionLabel)
@@ -55,7 +63,7 @@ class NoteCellTableViewCell: UITableViewCell {
                 emojiLabel.heightAnchor.constraint(equalToConstant: 40),
                 
                 titleLabel.leadingAnchor.constraint(equalTo: emojiLabel.trailingAnchor, constant: 12),
-                titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -1),
+                titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
                 titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
                 
                 descriptionLabel.leadingAnchor.constraint(equalTo: emojiLabel.trailingAnchor, constant: 12),
@@ -64,12 +72,9 @@ class NoteCellTableViewCell: UITableViewCell {
                 descriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
             ])
         }
-        
-        // 4. Метод для заполнения данными
         func configure(emoji: String, title: String, description: String) {
             emojiLabel.text = emoji
             titleLabel.text = title
             descriptionLabel.text = description
         }
-
 }

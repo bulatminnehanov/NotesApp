@@ -6,60 +6,85 @@
 //
 
 import UIKit
+import Foundation
 
-class ViewController: UIViewController, UITableViewDataSource {
+struct Notes {
+    let emoji: String
+    let title: String
+    let desc: String
+}
 
-    // Создаем таблицу
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+    
     let tableView: UITableView = {
         let table = UITableView()
         table.translatesAutoresizingMaskIntoConstraints = false
         return table
     }()
-
-    // Тестовые данные
-    let notes = [
-        (emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
-        (emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView и кастомными ячейками")
+    
+    let notes: [Notes] = [
+        Notes(emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
+        Notes(emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView и кастомными ячейками")
     ]
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
     }
-
+    
     private func setupTableView() {
+        tableView.register(NoteCellTableViewCell.self, forCellReuseIdentifier: "NoteCell")
+        tableView.dataSource = self
+        tableView.backgroundColor = .systemGray6
+        tableView.delegate = self
+        tableView.separatorStyle = .none
+        
         view.addSubview(tableView)
         
-        // Растягиваем таблицу на весь экран
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-
-        // ВАЖНО: Регистрируем ваш класс ячейки
-        tableView.register(NoteCellTableViewCell.self, forCellReuseIdentifier: "NoteCell")
-        
-        // Назначаем делегата и источник данных
-        tableView.dataSource = self
     }
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    // MARK: - UITableViewDataSource
+    func numberOfSections(in tableView: UITableView) -> Int {
         return notes.count
     }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 1
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-           // Достаем вашу ячейку из очереди
-           guard let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCellTableViewCell else {
-               return UITableViewCell()
-           }
-           
-           // Берем данные из массива
-           let note = notes[indexPath.row]
-           
-           // Вызываем ваш метод конфигурации
-           cell.configure(emoji: note.emoji, title: note.title, description: note.desc)
-           
-           return cell
-       }
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCellTableViewCell else {
+            return UITableViewCell()
+        }
+        
+        let note = notes[indexPath.section]  // section, а не row
+        cell.configure(emoji: note.emoji, title: note.title, description: note.desc)
+        
+        return cell
+    }
+    
+    // MARK: - UITableViewDelegate
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 0
+    }
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0
+    }
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = UIView()
+        header.backgroundColor = .clear
+        return header
+    }
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        let footer = UIView()
+        footer.backgroundColor = .clear
+        return footer
+    }
 }
+
 
