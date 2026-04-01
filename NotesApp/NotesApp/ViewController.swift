@@ -14,7 +14,7 @@ struct Notes {
     let desc: String
 }
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, EditNoteDelegate {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, EditNoteDelegate, AddNoteDelegate {
     
     let tableView: UITableView = {
         let table = UITableView()
@@ -26,10 +26,20 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         Notes(emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
         Notes(emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView и кастомными ячейками")
     ]
+    private let addButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = .systemBlue
+        button.layer.cornerRadius = 30
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
+        setupAddButton()
     }
     
     private func setupTableView() {
@@ -135,6 +145,33 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         return configuration
     }
+    private func setupAddButton() {
+        view.addSubview(addButton)
+        
+        NSLayoutConstraint.activate([
+            addButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            addButton.widthAnchor.constraint(equalToConstant: 60),
+            addButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+        
+        addButton.addTarget(self, action: #selector(addNoteTapped), for: .touchUpInside)
+    }
+    @objc private func addNoteTapped() {
+            let addVC = AddNoteViewController()
+            addVC.delegate = self
+            navigationController?.pushViewController(addVC, animated: true)
+        }
+        
+        func didAddNote(_ note: Notes) {
+            notes.append(note)
+            tableView.reloadData()
+            
+            // Прокручиваем к новой заметке
+            let lastSection = notes.count - 1
+            let indexPath = IndexPath(row: 0, section: lastSection)
+            tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+        }
 }
 
 

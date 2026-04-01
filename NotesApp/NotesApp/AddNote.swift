@@ -1,0 +1,139 @@
+//
+//  AddNote.swift
+//  NotesApp
+//
+//  Created by Булат Миннеханов on 01.04.2026.
+//
+
+import UIKit
+
+protocol AddNoteDelegate: AnyObject {
+    func didAddNote(_ note: Notes)
+}
+
+class AddNoteViewController: UIViewController {
+    
+    // MARK: - UI Elements
+    private let emojiTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Эмодзи"
+        textField.font = .systemFont(ofSize: 32)
+        textField.textAlignment = .center
+        textField.borderStyle = .roundedRect
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let titleTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Заголовок"
+        textField.font = .boldSystemFont(ofSize: 17)
+        textField.borderStyle = .roundedRect
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }()
+    
+    private let descriptionTextView: UITextView = {
+        let textView = UITextView()
+        textView.font = .systemFont(ofSize: 14)
+        textView.layer.borderColor = UIColor.lightGray.cgColor
+        textView.layer.borderWidth = 0.5
+        textView.layer.cornerRadius = 8
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        return textView
+    }()
+    
+    // MARK: - Properties
+    weak var delegate: AddNoteDelegate?
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupNavigationBar()
+        setupGradientBackground()
+    }
+    
+    // MARK: - Setup
+    private func setupUI() {
+        view.addSubview(emojiTextField)
+        view.addSubview(titleTextField)
+        view.addSubview(descriptionTextView)
+        
+        NSLayoutConstraint.activate([
+            emojiTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            emojiTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emojiTextField.widthAnchor.constraint(equalToConstant: 80),
+            emojiTextField.heightAnchor.constraint(equalToConstant: 50),
+            
+            titleTextField.topAnchor.constraint(equalTo: emojiTextField.bottomAnchor, constant: 20),
+            titleTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            titleTextField.heightAnchor.constraint(equalToConstant: 44),
+            
+            descriptionTextView.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
+            descriptionTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            descriptionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            descriptionTextView.heightAnchor.constraint(equalToConstant: 150)
+        ])
+    }
+    
+    private func setupNavigationBar() {
+        title = "Новая заметка"
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .save,
+            target: self,
+            action: #selector(saveNote)
+        )
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(cancel)
+        )
+    }
+    
+    private func setupGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor.systemBlue.cgColor,
+            UIColor.systemPurple.cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.frame = view.bounds
+        view.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // Делаем поля ввода белыми
+        emojiTextField.backgroundColor = .white
+        titleTextField.backgroundColor = .white
+        descriptionTextView.backgroundColor = .white
+    }
+    
+    // MARK: - Actions
+    @objc private func saveNote() {
+        guard let emoji = emojiTextField.text, !emoji.isEmpty,
+              let title = titleTextField.text, !title.isEmpty else {
+            showAlert(message: "Заполните эмодзи и заголовок")
+            return
+        }
+        
+        let newNote = Notes(
+            emoji: emoji,
+            title: title,
+            desc: descriptionTextView.text ?? ""
+        )
+        
+        delegate?.didAddNote(newNote)
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func cancel() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
