@@ -14,7 +14,7 @@ struct Notes {
     let desc: String
 }
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, EditNoteDelegate {
     
     let tableView: UITableView = {
         let table = UITableView()
@@ -22,7 +22,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return table
     }()
     
-    let notes: [Notes] = [
+    var notes: [Notes] = [
         Notes(emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
         Notes(emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView и кастомными ячейками")
     ]
@@ -35,7 +35,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     private func setupTableView() {
         tableView.register(NoteCellTableViewCell.self, forCellReuseIdentifier: "NoteCell")
         tableView.dataSource = self
-        tableView.backgroundColor = .systemGray6
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [UIColor.systemBlue.cgColor, UIColor.systemPurple.cgColor]
+        gradientLayer.frame = view.bounds
+        view.layer.insertSublayer(gradientLayer, at: 0)
+        
+        tableView.backgroundColor = .clear
         tableView.delegate = self
         tableView.separatorStyle = .none
         
@@ -62,7 +67,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             return UITableViewCell()
         }
         
-        let note = notes[indexPath.section]  // section, а не row
+        let note = notes[indexPath.section]
         cell.configure(emoji: note.emoji, title: note.title, description: note.desc)
         
         return cell
@@ -84,6 +89,47 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         let footer = UIView()
         footer.backgroundColor = .clear
         return footer
+    }
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            notes.remove(at: indexPath.section)
+            
+            tableView.deleteSections([indexPath.section], with: .fade)
+        }
+    }
+    func didUpdateNote(_ note: Notes, at index: Int) {
+        notes[index] = note
+        tableView.reloadData()
+    }
+    
+//    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+//        tableView.deselectRow(at: indexPath, animated: true)
+//        
+//        let note = notes[indexPath.section]
+//        let editVC = EditNoteViewController(note: note, index: indexPath.section)
+//        editVC.delegate = self
+//        navigationController?.pushViewController(editVC, animated: true)
+//    }
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let editAction = UIContextualAction(style: .normal, title: nil) { [weak self] (action, view, completion) in
+            guard let self = self else { return }
+            
+            let note = self.notes[indexPath.section]
+            let editVC = EditNoteViewController(note: note, index: indexPath.section)
+            editVC.delegate = self
+            self.navigationController?.pushViewController(editVC, animated: true)
+            
+            completion(true)
+        }
+        
+        editAction.image = UIImage(systemName: "square.and.pencil")
+        editAction.backgroundColor = .systemBlue
+        
+        let configuration = UISwipeActionsConfiguration(actions: [editAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        
+        return configuration
     }
 }
 

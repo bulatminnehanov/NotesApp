@@ -42,14 +42,31 @@ class NoteCellTableViewCell: UITableViewCell {
         
         private func setupUI() {
             backgroundColor = .clear
-            contentView.backgroundColor = .white
+            contentView.backgroundColor = .clear
             contentView.layer.cornerRadius = 12
             contentView.layer.masksToBounds = true
             
+            let blurEffect = UIBlurEffect(style: .systemMaterial)
+            let blurView = UIVisualEffectView(effect: blurEffect)
+            blurView.translatesAutoresizingMaskIntoConstraints = false
+            blurView.layer.cornerRadius = 20
+            blurView.layer.masksToBounds = true
+            
+  
+            contentView.insertSubview(blurView, at: 0)
+            
+  
+            NSLayoutConstraint.activate([
+                blurView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                blurView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+                blurView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                blurView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+            ])
+            
             layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.3
+            layer.shadowOpacity = 0.2
             layer.shadowOffset = CGSize(width: 0, height: 2)
-            layer.shadowRadius = 12
+            layer.shadowRadius = 8
             layer.masksToBounds = false
             
             contentView.addSubview(emojiLabel)
