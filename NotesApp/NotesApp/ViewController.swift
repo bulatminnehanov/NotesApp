@@ -101,15 +101,19 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         notes[index] = note
         tableView.reloadData()
     }
-    
-//    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        tableView.deselectRow(at: indexPath, animated: true)
-//        
-//        let note = notes[indexPath.section]
-//        let editVC = EditNoteViewController(note: note, index: indexPath.section)
-//        editVC.delegate = self
-//        navigationController?.pushViewController(editVC, animated: true)
-//    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        
+        if let cell = tableView.cellForRow(at: indexPath) as? NoteCellTableViewCell {
+            cell.animateTap()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            let note = self.notes[indexPath.section]
+            let detailVC = NoteDetailViewController(note: note, index: indexPath.section)
+            detailVC.delegate = self
+            self.navigationController?.pushViewController(detailVC, animated: true)
+        }
+    }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
         let editAction = UIContextualAction(style: .normal, title: nil) { [weak self] (action, view, completion) in

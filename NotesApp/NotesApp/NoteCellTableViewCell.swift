@@ -45,6 +45,7 @@ class NoteCellTableViewCell: UITableViewCell {
             contentView.backgroundColor = .clear
             contentView.layer.cornerRadius = 12
             contentView.layer.masksToBounds = true
+            selectionStyle = .none
             
             let blurEffect = UIBlurEffect(style: .systemMaterial)
             let blurView = UIVisualEffectView(effect: blurEffect)
@@ -94,4 +95,13 @@ class NoteCellTableViewCell: UITableViewCell {
             titleLabel.text = title
             descriptionLabel.text = description
         }
+    func animateTap() {
+        UIView.animate(withDuration: 0.08, animations: {
+            self.contentView.transform = CGAffineTransform(scaleX: 0.99, y: 0.99)
+        }) { _ in
+            UIView.animate(withDuration: 0.08) {
+                self.contentView.transform = .identity
+            }
+        }
+    }
 }
