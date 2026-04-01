@@ -80,9 +80,9 @@ class EditNoteViewController: UIViewController {
             gradientLayer.frame = view.bounds
             view.layer.insertSublayer(gradientLayer, at: 0)
             
-            emojiTextField.backgroundColor = .white
-            titleTextField.backgroundColor = .white
-            descriptionTextView.backgroundColor = .white
+            emojiTextField.backgroundColor = .black
+        titleTextField.backgroundColor = .black
+            descriptionTextView.backgroundColor = .black
         
         view.addSubview(emojiTextField)
         view.addSubview(titleTextField)

@@ -16,7 +16,7 @@ class AddNoteViewController: UIViewController {
     // MARK: - UI Elements
     private let emojiTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Эмодзи"
+        textField.placeholder = ":)"
         textField.font = .systemFont(ofSize: 32)
         textField.textAlignment = .center
         textField.borderStyle = .roundedRect
@@ -104,9 +104,9 @@ class AddNoteViewController: UIViewController {
         view.layer.insertSublayer(gradientLayer, at: 0)
         
         // Делаем поля ввода белыми
-        emojiTextField.backgroundColor = .white
-        titleTextField.backgroundColor = .white
-        descriptionTextView.backgroundColor = .white
+        emojiTextField.backgroundColor = .black
+        titleTextField.backgroundColor = .black
+        descriptionTextView.backgroundColor = .black
     }
     
     // MARK: - Actions
