@@ -43,6 +43,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     private func setupTableView() {
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 90, right: 0)
+        tableView.scrollIndicatorInsets = tableView.contentInset
         tableView.register(NoteCellTableViewCell.self, forCellReuseIdentifier: "NoteCell")
         tableView.dataSource = self
         let gradientLayer = CAGradientLayer()
