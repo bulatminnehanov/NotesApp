@@ -10,7 +10,9 @@ import Foundation
 
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, EditNoteDelegate, AddNoteDelegate {
-    
+    var searchController: UISearchController?
+    var filteredNotes: [Note] = []
+    var isSearching: Bool = false
     let tableView: UITableView = {
         let table = UITableView()
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -30,15 +32,24 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Заметки"
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
                 image: UIImage(systemName: "gearshape"),
                 style: .plain,
                 target: self,
                 action: #selector(settingsTapped)
             )
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .search,
+                target: self,
+                action: #selector(searchTapped)
+            )
+        
         setupTableView()
         setupAddButton()
         loadNotes()
+        
     }
     
     private func setupTableView() {
@@ -66,7 +77,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     // MARK: - UITableViewDataSource
     func numberOfSections(in tableView: UITableView) -> Int {
-        return notes.count
+        return isSearching ? filteredNotes.count : notes.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -75,13 +86,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCellTableViewCell else {
-            return UITableViewCell()
-        }
-        
-        let note = notes[indexPath.section]
-        cell.configure(emoji: note.emoji, title: note.title, description: note.desc)
-        
-        return cell
+                return UITableViewCell()
+            }
+            
+            let note = isSearching ? filteredNotes[indexPath.section] : notes[indexPath.section]
+            cell.configure(emoji: note.emoji, title: note.title, description: note.desc)
+            
+            return cell
     }
     
     // MARK: - UITableViewDelegate
@@ -103,24 +114,44 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-                deleteNote(at: indexPath.section)  // ← вызывает remove, deleteSections и saveNotes
+                if isSearching {
+                    let noteToDelete = filteredNotes[indexPath.section]
+                    if let index = notes.firstIndex(where: { $0.title == noteToDelete.title && $0.desc == noteToDelete.desc }) {
+                        deleteNote(at: index)
+                    }
+                    filteredNotes.remove(at: indexPath.section)
+                    tableView.deleteSections([indexPath.section], with: .fade)
+                } else {
+                    deleteNote(at: indexPath.section)
+                }
             }
     }
     func didUpdateNote(_ note: Note, at index: Int) {
         updateNote(note, at: index)  // ← этот метод уже делает update, reloadData и saveNotes
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: false)
-        
         if let cell = tableView.cellForRow(at: indexPath) as? NoteCellTableViewCell {
-            cell.animateTap()
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            let note = self.notes[indexPath.section]
-            let detailVC = EditNoteViewController(note: note, index: indexPath.section)
-            detailVC.delegate = self
-            self.navigationController?.pushViewController(detailVC, animated: true)
-        }
+                cell.animateTap()
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                guard let self = self else { return }
+                
+                let note: Note
+                let index: Int
+                
+                if self.isSearching {
+                    note = self.filteredNotes[indexPath.section]
+                    index = self.notes.firstIndex(where: { $0.title == note.title && $0.desc == note.desc }) ?? 0
+                } else {
+                    note = self.notes[indexPath.section]
+                    index = indexPath.section
+                }
+                
+                let editVC = EditNoteViewController(note: note, index: index)
+                editVC.delegate = self
+                self.navigationController?.pushViewController(editVC, animated: true)
+            }
     }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
@@ -210,6 +241,49 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     @objc private func settingsTapped() {
         let settingsVC = SettingsViewController()
         navigationController?.pushViewController(settingsVC, animated: true)
+    }
+    @objc private func searchTapped() {
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Поиск по заметкам"
+        searchController.searchBar.tintColor = .white
+        
+        // Настройка внешнего вида searchBar
+        searchController.searchBar.backgroundColor = .clear
+        searchController.searchBar.backgroundImage = UIImage()
+        
+        if let textField = searchController.searchBar.value(forKey: "searchField") as? UITextField {
+            textField.textColor = .white
+            textField.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+            textField.attributedPlaceholder = NSAttributedString(
+                string: "Поиск по заметкам",
+                attributes: [NSAttributedString.Key.foregroundColor: UIColor.white.withAlphaComponent(0.7)]
+            )
+        }
+        
+        self.searchController = searchController
+        present(searchController, animated: true)
+    }
+}
+extension ViewController: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        guard let searchText = searchController.searchBar.text, !searchText.isEmpty else {
+            isSearching = false
+            filteredNotes = []
+            tableView.reloadData()
+            return
+        }
+        
+        isSearching = true
+        
+        filteredNotes = notes.filter { note in
+            note.title.lowercased().contains(searchText.lowercased()) ||
+            note.desc.lowercased().contains(searchText.lowercased())
+        }
+        
+        tableView.reloadData()
     }
 }
 
