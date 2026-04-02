@@ -39,6 +39,7 @@ class AddNoteViewController: UIViewController {
         textView.layer.borderColor = UIColor.lightGray.cgColor
         textView.layer.borderWidth = 0.5
         textView.layer.cornerRadius = 8
+        textView.isScrollEnabled = false  // ← ВАЖНО: отключаем прокрутку
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()
@@ -53,12 +54,42 @@ class AddNoteViewController: UIViewController {
         setupNavigationBar()
         setupGradientBackground()
         applyTheme()
+        descriptionTextView.delegate = self  // ← добавить
+        addDoneButtonToTextView()
+        
         NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(themeChanged),
-                name: Notification.Name("ThemeChanged"),
-                object: nil
-            )
+            self,
+            selector: #selector(themeChanged),
+            name: Notification.Name("ThemeChanged"),
+            object: nil
+        )
+        emojiTextField.delegate = self
+        titleTextField.delegate = self
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+            view.addGestureRecognizer(tapGesture)
+    }
+    private func addDoneButtonToTextView() {
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        
+        let doneButton = UIBarButtonItem(
+            title: "Готово",
+            style: .prominent,
+            target: self,
+            action: #selector(dismissKeyboard)
+        )
+        
+        let flexibleSpace = UIBarButtonItem(
+            barButtonSystemItem: .flexibleSpace,
+            target: nil,
+            action: nil
+        )
+        
+        toolbar.items = [flexibleSpace, doneButton]
+        descriptionTextView.inputAccessoryView = toolbar
+    }
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)  // Скрывает клавиатуру для всех полей
     }
     @objc private func themeChanged() {
         applyTheme()
@@ -104,7 +135,7 @@ class AddNoteViewController: UIViewController {
             descriptionTextView.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
             descriptionTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             descriptionTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            descriptionTextView.heightAnchor.constraint(equalToConstant: 150)
+            //descriptionTextView.heightAnchor.constraint(equalToConstant: 150)
         ])
     }
     
@@ -161,5 +192,31 @@ class AddNoteViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-    
+    private func updateTextViewHeight() {
+        let size = descriptionTextView.sizeThatFits(CGSize(
+            width: descriptionTextView.frame.width,
+            height: CGFloat.greatestFiniteMagnitude
+        ))
+        
+        // Обновляем высоту, если она изменилась
+        if descriptionTextView.frame.height != size.height {
+            descriptionTextView.constraints.forEach { constraint in
+                if constraint.firstAttribute == .height {
+                    constraint.constant = size.height
+                }
+            }
+            view.layoutIfNeeded()
+        }
+    }
+}
+extension AddNoteViewController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        updateTextViewHeight()
+    }
+}
+extension AddNoteViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()  // Скрыть клавиатуру
+        return true
+    }
 }

@@ -39,6 +39,7 @@ class EditNoteViewController: UIViewController {
         textView.layer.borderColor = UIColor.lightGray.cgColor
         textView.layer.borderWidth = 0.5
         textView.layer.cornerRadius = 8
+        textView.isScrollEnabled = false  // ← ВАЖНО: отключаем прокрутку
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()
@@ -66,12 +67,42 @@ class EditNoteViewController: UIViewController {
         setupNavigationBar()
         loadNoteData()
         applyTheme()
+        descriptionTextView.delegate = self  // ← добавить
+        addDoneButtonToTextView()
+        
         NotificationCenter.default.addObserver(
-               self,
-               selector: #selector(themeChanged),
-               name: Notification.Name("ThemeChanged"),
-               object: nil
-           )
+            self,
+            selector: #selector(themeChanged),
+            name: Notification.Name("ThemeChanged"),
+            object: nil
+        )
+        emojiTextField.delegate = self
+        titleTextField.delegate = self
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+            view.addGestureRecognizer(tapGesture)
+    }
+    private func addDoneButtonToTextView() {
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        
+        let doneButton = UIBarButtonItem(
+            title: "Готово",
+            style: .prominent,
+            target: self,
+            action: #selector(dismissKeyboard)
+        )
+        
+        let flexibleSpace = UIBarButtonItem(
+            barButtonSystemItem: .flexibleSpace,
+            target: nil,
+            action: nil
+        )
+        
+        toolbar.items = [flexibleSpace, doneButton]
+        descriptionTextView.inputAccessoryView = toolbar
+    }
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)  // Скрывает клавиатуру для всех полей
     }
     @objc private func themeChanged() {
         applyTheme()
@@ -92,7 +123,7 @@ class EditNoteViewController: UIViewController {
         descriptionTextView.textColor = textColor
         descriptionTextView.layer.borderColor = UIColor.lightGray.cgColor
     }
-
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -103,16 +134,16 @@ class EditNoteViewController: UIViewController {
         title = "Редактировать заметку"
         
         let gradientLayer = CAGradientLayer()
-            gradientLayer.colors = [
-                UIColor.systemBlue.cgColor,
-                UIColor.systemPurple.cgColor
-            ]
-            gradientLayer.frame = view.bounds
-            view.layer.insertSublayer(gradientLayer, at: 0)
-            
-            emojiTextField.backgroundColor = .black
+        gradientLayer.colors = [
+            UIColor.systemBlue.cgColor,
+            UIColor.systemPurple.cgColor
+        ]
+        gradientLayer.frame = view.bounds
+        view.layer.insertSublayer(gradientLayer, at: 0)
+        
+        emojiTextField.backgroundColor = .black
         titleTextField.backgroundColor = .black
-            descriptionTextView.backgroundColor = .black
+        descriptionTextView.backgroundColor = .black
         
         view.addSubview(emojiTextField)
         view.addSubview(titleTextField)
@@ -154,6 +185,10 @@ class EditNoteViewController: UIViewController {
         emojiTextField.text = note.emoji
         titleTextField.text = note.title
         descriptionTextView.text = note.desc
+        
+        DispatchQueue.main.async {
+            self.updateTextViewHeight()
+        }
     }
     
     // MARK: - Actions
@@ -182,5 +217,32 @@ class EditNoteViewController: UIViewController {
         let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    private func updateTextViewHeight() {
+        let size = descriptionTextView.sizeThatFits(CGSize(
+            width: descriptionTextView.frame.width,
+            height: CGFloat.greatestFiniteMagnitude
+        ))
+        
+        // Обновляем высоту, если она изменилась
+        if descriptionTextView.frame.height != size.height {
+            descriptionTextView.constraints.forEach { constraint in
+                if constraint.firstAttribute == .height {
+                    constraint.constant = size.height
+                }
+            }
+            view.layoutIfNeeded()
+        }
+    }
+}
+extension EditNoteViewController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        updateTextViewHeight()
+    }
+}
+extension EditNoteViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()  // Скрыть клавиатуру
+        return true
     }
 }
