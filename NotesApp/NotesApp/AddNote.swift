@@ -52,6 +52,36 @@ class AddNoteViewController: UIViewController {
         setupUI()
         setupNavigationBar()
         setupGradientBackground()
+        applyTheme()
+        NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(themeChanged),
+                name: Notification.Name("ThemeChanged"),
+                object: nil
+            )
+    }
+    @objc private func themeChanged() {
+        applyTheme()
+    }
+    private func applyTheme() {
+        let isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
+        
+        // Цвет фона полей ввода
+        let fieldBackgroundColor: UIColor = isDarkMode ? .systemGray6 : .white
+        let textColor: UIColor = isDarkMode ? .white : .black
+        
+        emojiTextField.backgroundColor = fieldBackgroundColor
+        emojiTextField.textColor = textColor
+        
+        titleTextField.backgroundColor = fieldBackgroundColor
+        titleTextField.textColor = textColor
+        
+        descriptionTextView.backgroundColor = fieldBackgroundColor
+        descriptionTextView.textColor = textColor
+        descriptionTextView.layer.borderColor = UIColor.lightGray.cgColor
+    }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Setup

@@ -30,6 +30,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+                image: UIImage(systemName: "gearshape"),
+                style: .plain,
+                target: self,
+                action: #selector(settingsTapped)
+            )
         setupTableView()
         setupAddButton()
         loadNotes()
@@ -201,7 +207,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             tableView.deleteSections([index], with: .fade)
             saveNotes()
         }
-
+    @objc private func settingsTapped() {
+        let settingsVC = SettingsViewController()
+        navigationController?.pushViewController(settingsVC, animated: true)
+    }
 }
 
 
