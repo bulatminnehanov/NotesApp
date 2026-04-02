@@ -26,12 +26,12 @@ class NoteDetailViewController: UIViewController {
     }()
     
     // MARK: - Properties
-    var note: Notes
+    var note: Note
     var noteIndex: Int
     weak var delegate: EditNoteDelegate?
     
     // MARK: - Init
-    init(note: Notes, index: Int) {
+    init(note: Note, index: Int) {
         self.note = note
         self.noteIndex = index
         super.init(nibName: nil, bundle: nil)
@@ -86,7 +86,7 @@ class NoteDetailViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func saveNote() {
-        let updatedNote = Notes(
+        let updatedNote = Note(
             emoji: note.emoji,
             title: note.title,
             desc: textView.text

@@ -8,7 +8,7 @@
 import UIKit
 
 protocol EditNoteDelegate: AnyObject {
-    func didUpdateNote(_ note: Notes, at index: Int)
+    func didUpdateNote(_ note: Note, at index: Int)
 }
 
 class EditNoteViewController: UIViewController {
@@ -45,11 +45,11 @@ class EditNoteViewController: UIViewController {
     
     // MARK: - Properties
     weak var delegate: EditNoteDelegate?
-    var note: Notes
+    var note: Note
     var noteIndex: Int
     
     // MARK: - Init
-    init(note: Notes, index: Int) {
+    init(note: Note, index: Int) {
         self.note = note
         self.noteIndex = index
         super.init(nibName: nil, bundle: nil)
@@ -134,7 +134,7 @@ class EditNoteViewController: UIViewController {
             return
         }
         
-        let updatedNote = Notes(
+        let updatedNote = Note(
             emoji: emoji,
             title: title,
             desc: descriptionTextView.text ?? ""

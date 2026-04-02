@@ -8,7 +8,7 @@
 import UIKit
 
 protocol AddNoteDelegate: AnyObject {
-    func didAddNote(_ note: Notes)
+    func didAddNote(_ note: Note)
 }
 
 class AddNoteViewController: UIViewController {
@@ -117,12 +117,7 @@ class AddNoteViewController: UIViewController {
             return
         }
         
-        let newNote = Notes(
-            emoji: emoji,
-            title: title,
-            desc: descriptionTextView.text ?? ""
-        )
-        
+        let newNote = Note(emoji: emoji, title: title, desc: descriptionTextView.text ?? "")
         delegate?.didAddNote(newNote)
         navigationController?.popViewController(animated: true)
     }
@@ -136,4 +131,5 @@ class AddNoteViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
+    
 }

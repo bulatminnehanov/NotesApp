@@ -8,11 +8,6 @@
 import UIKit
 import Foundation
 
-struct Notes {
-    let emoji: String
-    let title: String
-    let desc: String
-}
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, EditNoteDelegate, AddNoteDelegate {
     
@@ -22,10 +17,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return table
     }()
     
-    var notes: [Notes] = [
-        Notes(emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
-        Notes(emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView и кастомными ячейками")
-    ]
+    var notes: [Note] = []
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
@@ -40,6 +32,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         super.viewDidLoad()
         setupTableView()
         setupAddButton()
+        loadNotes()
     }
     
     private func setupTableView() {
@@ -104,14 +97,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            notes.remove(at: indexPath.section)
-            
-            tableView.deleteSections([indexPath.section], with: .fade)
-        }
+                deleteNote(at: indexPath.section)  // ← вызывает remove, deleteSections и saveNotes
+            }
     }
-    func didUpdateNote(_ note: Notes, at index: Int) {
-        notes[index] = note
-        tableView.reloadData()
+    func didUpdateNote(_ note: Note, at index: Int) {
+        updateNote(note, at: index)  // ← этот метод уже делает update, reloadData и saveNotes
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: false)
@@ -121,7 +111,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             let note = self.notes[indexPath.section]
-            let detailVC = NoteDetailViewController(note: note, index: indexPath.section)
+            let detailVC = EditNoteViewController(note: note, index: indexPath.section)
             detailVC.delegate = self
             self.navigationController?.pushViewController(detailVC, animated: true)
         }
@@ -165,15 +155,53 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             navigationController?.pushViewController(addVC, animated: true)
         }
         
-        func didAddNote(_ note: Notes) {
-            notes.append(note)
+        func didAddNote(_ note: Note) {
             tableView.reloadData()
-            
+            addNote(note)
             // Прокручиваем к новой заметке
             let lastSection = notes.count - 1
             let indexPath = IndexPath(row: 0, section: lastSection)
             tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
         }
+    // MARK: - Data Persistence
+        private func loadNotes() {
+            let savedNotes = StorageService.shared.loadNotes()
+            if savedNotes.isEmpty {
+                // Первый запуск — добавляем демо-заметки
+                notes = [
+                    Note(emoji: "🍎", title: "Купить продукты", desc: "Молоко, хлеб, яйца"),
+                    Note(emoji: "💻", title: "Выучить Swift", desc: "Разобраться с UITableView")
+                ]
+                saveNotes()
+            } else {
+                notes = savedNotes
+            }
+            tableView.reloadData()
+        }
+        
+        private func saveNotes() {
+            StorageService.shared.saveNotes(notes)
+        }
+        
+        // MARK: - Data Operations (автосохранение)
+        func addNote(_ note: Note) {
+            notes.append(note)
+            tableView.reloadData()
+            saveNotes()
+        }
+        
+        func updateNote(_ note: Note, at index: Int) {
+            notes[index] = note
+            tableView.reloadData()
+            saveNotes()
+        }
+        
+        func deleteNote(at index: Int) {
+            notes.remove(at: index)
+            tableView.deleteSections([index], with: .fade)
+            saveNotes()
+        }
+
 }
 
 
